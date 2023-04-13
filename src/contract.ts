@@ -1,9 +1,15 @@
 import { Transfer as TransferEvent } from "../generated/Contract/Contract";
 import { Token, TokenMetadata } from "../generated/schema";
-
 import { TokenMetadata as TokenMetadataTemplate } from "../generated/templates";
 
-import { dataSource, log, json, Bytes } from "@graphprotocol/graph-ts";
+import {
+	dataSource,
+	log,
+	json,
+	Bytes,
+	JSONValueKind,
+	Value,
+} from "@graphprotocol/graph-ts";
 
 const ipfshash = "QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq";
 
@@ -18,7 +24,7 @@ export function handleTransfer(event: TransferEvent): void {
 		token = new Token(event.params.tokenId.toString());
 		token.tokenId = event.params.tokenId;
 
-		token.tokenURI = "/" + event.params.tokenId.toString() + ".json";
+		token.tokenURI = "/" + event.params.tokenId.toString();
 		const tokenIpfsHash = ipfshash + token.tokenURI;
 
 		token.ipfsURI = tokenIpfsHash;
@@ -35,7 +41,8 @@ export function handleTransfer(event: TransferEvent): void {
 
 export function handleMetadata(content: Bytes): void {
 	let tokenMetadata = new TokenMetadata(dataSource.stringParam());
-	const value = json.fromBytes(content).toObject();
+	let contentWithJson = Bytes.fromUTF8(content.toUTF8() + ".json");
+	const value = json.fromBytes(contentWithJson).toObject();
 	if (value) {
 		log.info("value: {}", [value ? "true" : "false"]);
 		const image = value.get("image");
